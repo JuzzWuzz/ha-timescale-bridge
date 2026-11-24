@@ -1,0 +1,11 @@
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+# Let the release-matched HA plugin install its httpx alias before respx imports.
+addopts = "-p no:respx"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["."]
+testpaths = ["tests"]
+[tool.ruff]
+line-length = 100
+[tool.ruff.lint]
+select = ["E", "F", "I"]
