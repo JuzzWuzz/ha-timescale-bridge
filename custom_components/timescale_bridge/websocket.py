@@ -11,6 +11,11 @@ async def _handle(hass, connection, message):
     if user is None or not user.is_active:
         connection.send_error(message["id"], "unauthorized", "An active HA user is required.")
         return
+    if message["type"] == "timescale_bridge/topology":
+        entries = hass.config_entries.async_entries("timescale_bridge")
+        nodes = entries[0].options.get("meters", []) if entries else []
+        connection.send_result(message["id"], {"api_version": 1, "meters": nodes})
+        return
     bridge = hass.data.get("timescale_bridge")
     if bridge is None:
         connection.send_error(message["id"], "not_ready", "Timescale Bridge is unavailable.")
@@ -50,6 +55,13 @@ async def query(hass, connection, message):
     await _handle(hass, connection, message)
 
 
+@websocket_api.websocket_command({vol.Required("type"): "timescale_bridge/topology"})
+@websocket_api.async_response
+async def topology(hass, connection, message):
+    await _handle(hass, connection, message)
+
+
 def register_commands(hass):
+    websocket_api.async_register_command(hass, topology)
     websocket_api.async_register_command(hass, catalog)
     websocket_api.async_register_command(hass, query)

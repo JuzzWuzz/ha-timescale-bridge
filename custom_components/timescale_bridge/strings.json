@@ -1,0 +1,91 @@
+{
+  "title": "Timescale Bridge",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the Read Replica",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "database": "Database",
+          "username": "Read-only user",
+          "password": "Password",
+          "sslmode": "TLS mode"
+        },
+        "description": "Use verify-full to verify the server identity. Choosing disable sends credentials and data without transport encryption."
+      },
+      "adopt": {
+        "title": "Adopt existing YAML connection",
+        "description": "Save the existing replica settings in Home Assistant. After setup, remove the timescale_bridge YAML block and restart."
+      },
+      "reconfigure": {
+        "title": "Update Read Replica settings",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "database": "Database",
+          "username": "Read-only user",
+          "password": "Password",
+          "sslmode": "TLS mode"
+        },
+        "description": "Use verify-full to verify the server identity. Choosing disable sends credentials and data without transport encryption."
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not verify the replica connection.",
+      "invalid_settings": "Check the connection settings."
+    },
+    "abort": {
+      "already_configured": "A bridge is already configured.",
+      "reconfigure_successful": "Replica settings updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Electricity meters",
+        "menu_options": {
+          "add": "Add meter",
+          "edit": "Edit meter",
+          "remove": "Remove meter"
+        }
+      },
+      "add": {
+        "title": "Choose an energy series",
+        "data": {
+          "series": "Energy series"
+        }
+      },
+      "edit": {
+        "title": "Edit meter",
+        "data": {
+          "series": "Meter"
+        }
+      },
+      "remove": {
+        "title": "Remove meter",
+        "data": {
+          "series": "Meter to remove"
+        }
+      },
+      "meter": {
+        "title": "Meter details",
+        "data": {
+          "label": "Display name",
+          "parent": "Upstream meter or independent grid feed"
+        }
+      }
+    },
+    "error": {
+      "empty_label": "Enter a name.",
+      "invalid_parent": "Choose an existing upstream meter outside this branch."
+    },
+    "abort": {
+      "cannot_connect": "Replica unavailable.",
+      "no_series": "No more available energy series.",
+      "no_meters": "Add a meter first.",
+      "has_children": "Move or remove downstream meters first.",
+      "stale": "The catalog or topology changed. Reopen the editor."
+    }
+  }
+}

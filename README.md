@@ -2,9 +2,9 @@
 
 A Home Assistant custom integration for the documented TimescaleDB schema exposing a TimescaleDB **physical replica**
 through authenticated HA WebSocket commands. No entities, MQTT dependency, Recorder replacement,
-database writes, primary fallback, or browser-side database configuration.
+database writes, primary fallback, or database access from cards.
 
-Version **0.1.1** is an initial package. Replica acceptance checks remain pending;
+Version **0.2.0** adds UI setup and Electricity meter configuration. Existing YAML installations can be adopted through the UI. Replica acceptance checks remain pending;
 read the [API](docs/api.md) and [verification notes](docs/verification.md) before use.
 
 ## Install from Marketplace / HACS
@@ -20,10 +20,8 @@ after installation leaves the installed files in place but prevents future downl
    In older HACS, use **Custom repositories**, the same URL, and category **Integration**.
 2. Use the published release when available; otherwise select the default branch **main**.
    The integration files belong in `custom_components/timescale_bridge/`.
-3. Add the YAML configuration and HA-local secret entries below. This integration has no UI
-   config flow, so there is no subsequent “Add integration” setup form.
-4. Check the HA configuration and restart Home Assistant. Restart again after integration updates
-   or configuration changes. The integration connects only to the configured Read Replica.
+3. Restart HA after installing the component. Open **Settings → Devices & services → Add integration → Timescale Bridge**.
+4. Enter the Read Replica hostname, port, database, read-only role and password. Keep **verify-full** unless your installation explicitly requires unencrypted transport. HA verifies the replica before saving.
 
 [Open in Marketplace](https://my.home-assistant.io/redirect/marketplace_repository/?owner=JuzzWuzz&repository=ha-timescale-bridge&category=integration)
 
@@ -41,7 +39,15 @@ See [observed results and limits](docs/verification.md#pre-install-interval-and-
 
 ## Configuration
 
-After installation (or manually copying the component folder), configure one target in `configuration.yaml`; keep credentials in HA `secrets.yaml`:
+### Electricity meters
+
+Open **Settings → Devices & services → Timescale Bridge → Configure**. Choose **Add meter**, select a catalog series whose metric is `energy`, and give it a display name. Choose **Independent grid feed** for each separately metered incoming connection, including channels on the same physical monitor. For a downstream meter, choose its immediate upstream meter. Add parents first. Use **Edit meter** to rename or move a branch. Move or remove children before removing their parent.
+
+HA saves the hierarchy in the integration entry. Editing it changes how consumers group series. It does not alter historical measurements. Use **Reconfigure** to update replica settings while keeping the hierarchy. Series IDs belong to one catalog. Recheck every meter assignment if you switch to a different database or rebuild the catalog. Back up the HA configuration securely, including config entry storage, which contains the connection credentials.
+
+### Existing YAML installations
+
+The existing YAML setup and card commands continue to work. To enable the meter editor, leave the working YAML in place, choose **Add integration → Timescale Bridge**, then confirm **Adopt existing YAML connection**. HA copies the resolved settings into a single config entry and reuses the active connection. Once the entry is loaded, remove only the bridge YAML block and restart. When both exist, the config entry takes precedence, including for credential changes. A legacy configuration looks like this:
 
 ```yaml
 timescale_bridge:
@@ -86,16 +92,12 @@ SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid();
 **that psql session** uses TLS. Neither verifies the bridge's connection, its CA configuration,
 or hostname verification; even a TLS-enabled server can accept an unencrypted session.
 
-Credentials are configured solely on the HA server: no config flow asks for them in a browser,
-and no API response exposes them. All active authenticated HA users can read the complete bridge
+Administrators enter credentials in HA setup. The bridge read APIs expose no connection settings. All active authenticated HA users can read the complete bridge
 catalog/data; HA entity-specific access rules do not filter these external series. Do not enable
 this integration in a shared HA instance unless that access policy is appropriate.
 
 Startup verifies `pg_is_in_recovery()` and fails closed for a primary. Each read repeats this check
-inside a read-only transaction, including after reconnects. Startup failures require an HA restart
-once configuration/connectivity is fixed. After successful startup, the pool can reconnect to the
-same target on later requests. HA shutdown closes the pool with a bounded wait. Configuration
-changes also require restart; config-entry UI, reload and reauthentication flows are not provided.
+inside a read-only transaction, including after reconnects. HA retries unavailable UI entries. For YAML-only setup, restart HA after correcting startup failures. Unloading the entry or stopping HA closes the pool.
 
 ## Read-only replica setup
 

@@ -40,8 +40,7 @@ Test environments:
 
 Do not install `pytest-homeassistant-custom-component` alongside the official release-matched
 plugin. The pytest configuration disables the independent respx plugin so HA can initialize its
-httpx alias. Dependency locks record the separate environments. This YAML integration has no
-config-entry unload/reload; its tested cleanup path is HA shutdown.
+httpx alias. Dependency locks record the separate environments. The YAML-only cleanup path is HA shutdown. UI entries also support unload and reload.
 
 ```sh
 uv venv --python 3.14.2 /tmp/ha-bridge-tests
@@ -95,3 +94,9 @@ PYTHONPATH=. /tmp/ha-bridge-tests/bin/python scripts/verify_disposable_timescale
 
 No production credentials or private configuration are included. Example database, role and series
 names are placeholders or synthetic fixtures; substitute installation-specific values locally.
+
+## Electricity topology in 0.2.0
+
+The isolated Python 3.14.2 / Home Assistant Core 2026.11.2 suite passed 63 tests with a mock replica. Tests submitted setup and meter forms over HA's authenticated HTTP configuration endpoints and read the hierarchy over its test WebSocket. A read-only HA account was denied access to the options flow. The synthetic hierarchy covered two independent roots, four levels, a sibling load, and a load on the second feed. Tests exercised reparenting, renaming, deletion, rejection of cycles, missing parents, duplicate and non-energy series, entry reload, settings reconfiguration, and adoption of a running YAML configuration without opening another pool.
+
+Browser rendering, live replica reads, and upgrade on an installed HA system remain unverified. The historical Electricity chart and Sankey are future consumers of this topology.

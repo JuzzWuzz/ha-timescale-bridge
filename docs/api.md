@@ -93,3 +93,13 @@ Bridge errors: `invalid_request`, `unknown_series`, `busy`, `replica_required`,
 `replica_unavailable`, `timeout`, `too_many_points`, `invalid_data`, `unauthorized`, `not_ready`.
 HA additionally returns normal `invalid_format` errors. Database exception text is not returned.
 No automatic primary, raw-data, or MQTT fallback is performed.
+
+## Electricity topology
+
+An active authenticated HA user can send `{"id":1,"type":"timescale_bridge/topology"}`. The HA success envelope contains a result like the following.
+
+```json
+{"api_version":1,"meters":[{"series_id":1,"label":"Feed A","parent_id":null},{"series_id":2,"label":"Feed B","parent_id":null},{"series_id":4,"label":"Lighting","parent_id":2}]}
+```
+
+Each null parent identifies an independent grid feed. Other parents are catalog series IDs. Reconstruct the forest by ID regardless of list order. An empty list means no meters have been configured. Use the existing query command with a shared date range to obtain measurements. Root totals already include downstream usage, so summing every level would double count. Meter writes go through HA's permission-checked configuration UI.

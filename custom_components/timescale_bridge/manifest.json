@@ -1,7 +1,9 @@
 {
+  "config_flow": true,
+  "single_config_entry": true,
   "domain": "timescale_bridge",
   "name": "Timescale Bridge",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "documentation": "https://github.com/JuzzWuzz/ha-timescale-bridge",
   "issue_tracker": "https://github.com/JuzzWuzz/ha-timescale-bridge/issues",
   "codeowners": [],
