@@ -201,3 +201,46 @@ async def test_frontend_http_forms(hass, hass_client, hass_read_only_access_toke
         assert updated["reason"] == "reconfigure_successful"
         await hass.async_block_till_done()
         assert entry.options["meters"][0]["label"] == "Feed A"
+
+
+async def test_sidebar_lifecycle(hass, hass_ws_client, hass_client, database):
+    """Discover the real panel over WS and download the assets HA advertises."""
+    from homeassistant.components import frontend
+    from pytest_homeassistant.common import MockConfigEntry
+
+    from custom_components.timescale_bridge.panel import PATH
+
+    entry = MockConfigEntry(domain="timescale_bridge", data={})
+    entry.add_to_hass(hass)
+    with patch("custom_components.timescale_bridge.Database.open", return_value=database):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        client = await hass_ws_client(hass)
+        await client.send_json({"id": 1, "type": "get_panels"})
+        reply = await client.receive_json()
+        assert reply["success"], reply
+        panel = reply["result"][PATH]
+        assert panel["title"] == "Timescale Energy"
+        assert panel["config"].keys() == {"_panel_custom"}
+        custom = panel["config"]["_panel_custom"]
+        assert custom["name"] == "timescale-energy-panel"
+        url = custom["module_url"]
+        assert url == "/timescale_bridge_static/0.3.0-beta.1/timescale-energy-panel.js"
+        http = await hass_client()
+        for path, marker in (
+            (url, 'customElements.define("timescale-energy-panel"'),
+            (url.replace("-panel.js", ".css"), ":host"),
+        ):
+            response = await http.get(path)
+            assert response.status == 200
+            assert marker in await response.text()
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        assert frontend.async_panel_exists(hass, PATH)
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        assert not frontend.async_panel_exists(hass, PATH)
+        frontend.async_register_built_in_panel(hass, "custom", frontend_url_path=PATH)
+        owner = hass.data[frontend.DATA_PANELS][PATH]
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        assert hass.data[frontend.DATA_PANELS][PATH] is owner
+        await client.close()

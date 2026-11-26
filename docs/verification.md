@@ -100,3 +100,9 @@ names are placeholders or synthetic fixtures; substitute installation-specific v
 The isolated Python 3.14.2 / Home Assistant Core 2026.11.2 suite passed 63 tests with a mock replica. Tests submitted setup and meter forms over HA's authenticated HTTP configuration endpoints and read the hierarchy over its test WebSocket. A read-only HA account was denied access to the options flow. The synthetic hierarchy covered two independent roots, four levels, a sibling load, and a load on the second feed. Tests exercised reparenting, renaming, deletion, rejection of cycles, missing parents, duplicate and non-energy series, entry reload, settings reconfiguration, and adoption of a running YAML configuration without opening another pool.
 
 Browser rendering, live replica reads, and upgrade on an installed HA system remain unverified. The historical Electricity chart and Sankey are future consumers of this topology.
+
+## Sidebar prerelease
+
+The release-matched test suite uses a synthetic replica and an isolated HA instance. With Chromium on the path, `tests/test_sidebar_browser.py` opens the real Home Assistant settings page and clicks **Timescale Energy** in the sidebar. The test checks the versioned module download, two independent feeds, nested loads, residuals, period navigation, missing data, query errors, narrow layout and an empty topology. The browser runs in a different time zone from the bridge. To run these checks, install the target-version test lock and run `python -m pytest -q` in that environment.
+
+The installation uses the GitHub tag archive. Marketplace extracts the entire `custom_components/timescale_bridge/` directory, including the frontend JavaScript and stylesheet. A live replica and an upgrade of an existing household installation remain separate acceptance checks.

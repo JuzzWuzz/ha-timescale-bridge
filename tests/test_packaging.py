@@ -28,7 +28,7 @@ def test_marketplace_component_layout_and_metadata():
     component = components / "timescale_bridge"
     _check_loadable_manifest(component, "timescale_bridge")
     manifest = json.loads((component / "manifest.json").read_text())
-    assert manifest["version"] == "0.2.0"
+    assert manifest["version"] == "0.3.0-beta.1"
     assert manifest["requirements"] == ["asyncpg==0.31.0"]
     assert (component / "__init__.py").is_file()
     for key in ("documentation", "issue_tracker", "name"):

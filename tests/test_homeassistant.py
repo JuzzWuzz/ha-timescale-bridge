@@ -97,8 +97,9 @@ async def test_setup_and_stop_close_pool(hass, database):
             }
         }
     )
-    with patch(
-        "custom_components.timescale_bridge.Database.open", AsyncMock(return_value=database)
+    with (
+        patch("custom_components.timescale_bridge.Database.open", AsyncMock(return_value=database)),
+        patch("custom_components.timescale_bridge.async_add_panel", new_callable=AsyncMock),
     ):
         assert await async_setup(hass, config)
     assert "timescale_bridge" in hass.data

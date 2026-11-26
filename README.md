@@ -1,11 +1,10 @@
-# HA Timescale Bridge — phase 1
+# HA Timescale Bridge
 
 A Home Assistant custom integration for the documented TimescaleDB schema exposing a TimescaleDB **physical replica**
 through authenticated HA WebSocket commands. No entities, MQTT dependency, Recorder replacement,
 database writes, primary fallback, or database access from cards.
 
-Version **0.2.0** adds UI setup and Electricity meter configuration. Existing YAML installations can be adopted through the UI. Replica acceptance checks remain pending;
-read the [API](docs/api.md) and [verification notes](docs/verification.md) before use.
+The **v0.3.0-beta.1** prerelease adds **Timescale Energy** to the Home Assistant sidebar. It uses the electricity meters saved in the integration and reads their history through the bridge. Existing config entries, YAML adoption and custom cards continue to use the same configuration and WebSocket commands.
 
 ## Install from Marketplace / HACS
 
@@ -18,15 +17,22 @@ after installation leaves the installed files in place but prevents future downl
    `https://github.com/JuzzWuzz/ha-timescale-bridge`. Choose **Integration** if prompted and
    install/download **Timescale Bridge**. A GitHub connection may be required for custom repositories.
    In older HACS, use **Custom repositories**, the same URL, and category **Integration**.
-2. Use the published release when available; otherwise select the default branch **main**.
-   The integration files belong in `custom_components/timescale_bridge/`.
-3. Restart HA after installing the component. Open **Settings → Devices & services → Add integration → Timescale Bridge**.
+2. For the sidebar beta, enable prereleases for this repository and select **v0.3.0-beta.1**. On an existing installation, redownload that version over the installed component. Marketplace installs the complete `custom_components/timescale_bridge/` directory.
+3. Restart HA and refresh the browser after installing or updating. On a new installation, open **Settings → Devices & services → Add integration → Timescale Bridge**.
 4. Enter the Read Replica hostname, port, database, read-only role and password. Keep **verify-full** unless your installation explicitly requires unencrypted transport. HA verifies the replica before saving.
 
 [Open in Marketplace](https://my.home-assistant.io/redirect/marketplace_repository/?owner=JuzzWuzz&repository=ha-timescale-bridge&category=integration)
 
 The integration is not submitted to the public catalog. Marketplace/HACS installs the component
 folder from the selected GitHub ref; no release ZIP asset is required for this layout.
+
+## Timescale Energy
+
+Open **Timescale Energy** in the sidebar or go to `/timescale-energy`. Select a day, week or month and use the arrows to move between periods. **Refresh** reads the latest topology and historical data. A new installation with no meters shows directions to the integration's meter editor.
+
+The headline and stacked chart count independent grid feeds once. The breakdown shows each meter under its immediate parent. **Untracked** is what remains after subtracting that meter’s direct children in the same intervals. Negative residuals flag a mismatch for review. All three periods use the same 30-minute Wh deltas, grouped for display in kWh. The bridge uses Johannesburg calendar boundaries even when the browser is in another time zone. The current period runs through the latest closed half hour. Gaps and partial readings yield **Incomplete**, and observed zeroes remain zero.
+
+The integration registers and serves its bundled module automatically. If another panel owns the same path, the bridge logs a warning and continues serving its WebSocket API. Resolve the conflicting path, then reload the integration. Existing Lovelace resources can stay in place.
 
 ## Pre-install compatibility
 
@@ -201,5 +207,4 @@ environment. No production credentials or replica connection are needed to run t
 are mocked; HA dispatch tests use the installed Home Assistant implementation. Do not infer that
 Timescale SQL has been executed from a passing fixture suite.
 
-A dashboard adapter can consume the catalog and query API without MQTT or placeholder entities.
-Database lookup and query logic stay in this integration. No dashboard adapter is included here.
+The sidebar and other dashboard adapters use the authenticated bridge API. Database lookup and query logic stay in the integration.

@@ -10,6 +10,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .database import Database
 from .model import BridgeError
+from .panel import async_add_panel, remove_panel
 from .service import Bridge
 from .websocket import register_commands
 
@@ -54,6 +55,11 @@ async def _start(hass, settings):
     if DOMAIN in hass.data:
         return
     db = await Database.open(settings)
+    try:
+        await async_add_panel(hass)
+    except BaseException:
+        await db.close()
+        raise
     hass.data[DOMAIN] = Bridge(db)
 
     async def stop(_event):
@@ -63,6 +69,7 @@ async def _start(hass, settings):
 
 
 async def _close(hass):
+    remove_panel(hass)
     unsubscribe = hass.data.pop("timescale_bridge_stop", None)
     if unsubscribe:
         unsubscribe()
